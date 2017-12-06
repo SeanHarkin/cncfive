@@ -5,37 +5,11 @@
  
 Adafruit_SSD1306 display = Adafruit_SSD1306();                                                                  //This is all OLED Wing code
  
-#if defined(ESP8266)
-  #define BUTTON_A 0
-  #define BUTTON_B 16
-  #define BUTTON_C 2
-  #define LED      0
-#elif defined(ESP32)
-  #define BUTTON_A 15
-  #define BUTTON_B 32
-  #define BUTTON_C 14
-  #define LED      13
-#elif defined(ARDUINO_STM32F2_FEATHER)
-  #define BUTTON_A PA15
-  #define BUTTON_B PC7
-  #define BUTTON_C PC5
-  #define LED PB5
-#elif defined(TEENSYDUINO)
-  #define BUTTON_A 4
-  #define BUTTON_B 3
-  #define BUTTON_C 8
-  #define LED 13
-#elif defined(ARDUINO_FEATHER52)
-  #define BUTTON_A 31
-  #define BUTTON_B 30
-  #define BUTTON_C 27
-  #define LED 17
-#else // 32u4, M0, and 328p
+ // 32u4, M0, and 328p
   #define BUTTON_A 9
   #define BUTTON_B 6
   #define BUTTON_C 5
   #define LED      13
-#endif
  
 #if (SSD1306_LCDHEIGHT != 32)
  #error("Height incorrect, please fix Adafruit_SSD1306.h!");
@@ -43,7 +17,9 @@ Adafruit_SSD1306 display = Adafruit_SSD1306();                                  
 
 int advice;                           //int to pull from our list of useful/less advice
 bool push;                            //bool for 1 button push
- 
+long timer=0;                            //timer to clear screen after being inactive for 1min
+long newTimer=0;
+
 void setup() {  
   Serial.begin(9600);
  
@@ -53,7 +29,6 @@ void setup() {
   Serial.println("OLED begun");                         //More OLED wing specific code
   
   display.display();
-  delay(1000);
  
   // Clear the buffer.
   display.clearDisplay();
@@ -75,13 +50,14 @@ void setup() {
  
 void loop() {
 
+ 
   if (! digitalRead(BUTTON_A)) ask();                                                         //If any of the buttons are pushed, ask for advice
 
   if (! digitalRead(BUTTON_B)) ask();
 
   if (! digitalRead(BUTTON_C)) ask();
 
-  delay(10);
+  //delay(10);
   yield();
   display.display();
 
@@ -98,19 +74,35 @@ void loop() {
       if (digitalRead(BUTTON_C) == LOW){                                                           
     delay(100);                                                                                     
     push = !push;                                                                                   
-    digitalWrite(BUTTON_C, push);                                                                   
+    digitalWrite(BUTTON_C, push);  
   }
+
+  if (! digitalRead(BUTTON_A));
+     (! digitalRead(BUTTON_A));
+     (! digitalRead(BUTTON_A));
+
+    if ((millis()-newTimer>=5000) && (millis()-newTimer<=5100)){
+        display.clearDisplay();
+        display.display();
+        display.setCursor(0,0);                                                   //Reset the cursor position
+        display.print("Ask me for advice");                                       //Reprint the question (Should always be shown)
+        display.setCursor(0,20);                                                  //Set the cursor position for the answer
+    }
+     
 }
+
 
 void ask(){
 
+    timer=millis();
+    
     display.clearDisplay();                                                   //If there has been previous advice,
     display.display();
     display.setCursor(0,0);                                                   //Reset the cursor position
     display.print("Ask me for advice");                                       //Reprint the question (Should always be shown)
     display.setCursor(0,20);                                                  //Set the cursor position for the answer
   
-   advice = round(random(0,3));                                               //randomise what advice is called
+   advice = round(random(0,6));                                               //randomise what advice is called
   
   if (advice == 0){
   display.print("Hell Yeah!");                                                 //advice should be limited to 21char
@@ -120,7 +112,27 @@ void ask(){
   }
   if (advice == 2){
   display.print("What why?");
+  }  
+  if (advice == 3){
+  display.print("Go for a beer instead");                                                 //advice should be limited to 21char
   }
+  if (advice == 4){
+  display.print("Go back to bed");
+  }
+  if (advice == 5){
+  display.print("What would Batman do?");
+  }
+
+  if (millis()-timer>=5000){
+        display.clearDisplay();
+        display.display();
+        display.setCursor(0,0);                                                   //Reset the cursor position
+        display.print("Ask me for advice");                                       //Reprint the question (Should always be shown)
+        display.setCursor(0,20);                                                  //Set the cursor position for the answer
+        
+  }
+     newTimer = millis();
+  
 }
 
   
